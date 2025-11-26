@@ -14,42 +14,18 @@
 			function signSuccess() {
 				console.log("test.html: signSuccess 被调用");
 
-				// 优先检测 uni-app web-view 环境
-				if (typeof uni !== 'undefined' && uni.postMessage) {
-					console.log("uni-app web-view 环境");
-					// 使用 uni.postMessage 发送消息给 uni-app
-					uni.postMessage({
-						data: {
-							action: 'signSuccess',
-							payload: {
-								message: '签署成功',
-								timestamp: new Date().getTime()
-							}
-						}
-					});
-				} else if (/android/i.test(navigator.userAgent)) {
+				//给客户端发送消息
+				if (/android/i.test(navigator.userAgent)) {
 					console.log("android");
-					if (window.android && window.android.signSuccess) {
-						window.android.signSuccess('authSuccess');
-					}
+					window.android.signSuccess('authSuccess');
 				} else if (/ipad|iphone|iPod|iOS/i.test(navigator.userAgent)) {
 					console.log("ios");
-					if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.FLJMessage) {
-						window.webkit.messageHandlers.FLJMessage.postMessage({
-							"auth": "success"
-						});
-					}
+					window.webkit.messageHandlers.FLJMessage.postMessage({
+						"auth": "success"
+					});
 				} else {
 					console.log("web");
-					// 普通浏览器环境，使用 postMessage
-					if (window.parent) {
-						window.parent.postMessage({
-							action: 'signSuccess',
-							payload: {
-								message: '签署成功'
-							}
-						}, '*');
-					}
+					window.parent.postMessage('JsonString', '*');
 				}
 			}
 		</script>
