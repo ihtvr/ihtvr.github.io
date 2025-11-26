@@ -7,25 +7,39 @@
 		<title>测试页面</title>
 	</head>
 	<body>
-		<h1>这是 test.html 页面11</h1>
-		<button onclick="signSuccess()">点击我 uni-app</button>
+		<h1>这是 test.html 页面</h1>
+		<button onclick="signSuccess()">点击我发送消息给 uni-app</button>
 
 		<script>
 			function signSuccess() {
 				console.log("test.html: signSuccess 被调用");
 
-				//给客户端发送消息
+				// 给客户端/宿主发送消息（保留原有平台桥接）
+				var payload = {
+					type: 'signSuccess',
+					data: {
+						auth: 'success',
+						message: 'authSuccess'
+					}
+				};
+
 				if (/android/i.test(navigator.userAgent)) {
 					console.log("android");
-					window.android.signSuccess('authSuccess');
+					try { window.android.signSuccess('authSuccess'); } catch (e) { console.warn(e); }
 				} else if (/ipad|iphone|iPod|iOS/i.test(navigator.userAgent)) {
 					console.log("ios");
-					window.webkit.messageHandlers.FLJMessage.postMessage({
-						"auth": "success"
-					});
+					try { window.webkit.messageHandlers.FLJMessage.postMessage({ "auth": "success" }); } catch (e) { console.warn(e); }
 				} else {
 					console.log("web");
-					window.parent.postMessage('JsonString', '*');
+				}
+
+				// 无论何种平台，尝试通过 postMessage 发送结构化数据，方便 uni-app 或父窗口监听
+				try {
+					if (window.parent && window.parent.postMessage) {
+						window.parent.postMessage(JSON.stringify(payload), '*');
+					}
+				} catch (e) {
+					console.warn('postMessage 发送失败', e);
 				}
 			}
 		</script>
